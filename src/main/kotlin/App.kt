@@ -10,6 +10,12 @@ fun main() {
     ent.addCards(cr.getRandom())
     ent.addCards(cr.getRandom())
     ent.addCards(cr.getRandom())
+    ent.addCards(cr.getRandom())
+    ent.addCards(cr.getRandom())
 
     println(ent)
+
+    println("================================")
+
+    ent.getStatus()
 }
