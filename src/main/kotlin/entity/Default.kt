@@ -11,6 +11,9 @@ data class Default(val name: String, var money: Int) {
     public fun getStatus(): String {
         rules.setAllCards(cards)
         rules.getListItem()
+        val s = rules.getResult()
+        status = s;
+        println(status)
         return status
     }
 
