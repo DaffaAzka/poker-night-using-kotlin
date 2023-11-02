@@ -5,22 +5,18 @@ import service.Rules
 data class Default(val name: String, var money: Int) {
     private var status: String = "None Pair"
     private var n = 0
-    private var cards: MutableMap<Int, List<String>> = mutableMapOf()
+    private var cards = mutableListOf<Card>()
     private var rules = Rules()
 
     public fun getStatus(): String {
         rules.setAllCards(cards)
-        rules.getListItem()
-        val s = rules.getResult()
-        status = s;
-        println(status)
-        return status
+        return rules.getResult()
     }
 
 
 
-    public fun addCards(l: List<String>) {
-        cards[n] = l
+    public fun addCards(rank: String, suit: String) {
+        cards.add(Card(rank, suit))
         n++
     }
 
@@ -30,3 +26,5 @@ data class Default(val name: String, var money: Int) {
 
 
 }
+
+class Card(val rank: String, val suit: String)

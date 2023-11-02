@@ -1,11 +1,13 @@
 package service
 
-public class Rules {
-    private var cards: MutableList<List<String>> = mutableListOf()
+import entity.Card
 
-    public fun setAllCards(map: MutableMap<Int, List<String>>){
+public class Rules {
+    private var cards = mutableListOf<Card>()
+
+    public fun setAllCards(map: MutableList<Card>){
         for (i in 0..<map.size) {
-            map[i]?.let { cards.add(it) }
+            map[i].let { cards.add(it) }
         }
     }
 
@@ -14,6 +16,7 @@ public class Rules {
     }
 
     public fun getResult(): String {
+        if (straightFlush()) return "Straight Flush"
         if (fourOfKind()) return "Four Of a Kind"
         if (fullHouse()) return "Full House"
         if (flush()) return "Flush"
@@ -25,87 +28,64 @@ public class Rules {
         return "None Pair"
     }
 
-    private fun fourOfKind(): Boolean {
-        var pair = 0
-        for (i in 0..<cards.size) {
-            val list1 = cards[i][1]
-            for (j in (i + 1)..<cards.size) {
-                val list2 = cards[j][1]
-                for (k in (i + 2)..<cards.size) {
-                    val list3 = cards[k][1]
-                    for (l in (i + 3)..<cards.size) {
-                        val list4 = cards[l][1]
-                        if (list1 == list2 && list2 == list3 && list3 == list4) {
-                            pair++
-                        }
-                    }
+    private fun straightFlush(): Boolean {
+        val sortedCards = cards.sortedBy { it.rank }
+        var straightFlush = mutableListOf(sortedCards[0])
+        for (i in 1..<sortedCards.size) {
+            if (sortedCards[i].rank == straightFlush.last().rank + 1 && sortedCards[i].suit == straightFlush.last().suit) {
+                straightFlush.add(sortedCards[i])
+                if (straightFlush.size == 5) {
+                    return true
                 }
+            } else if (sortedCards[i].rank != straightFlush.last().rank || sortedCards[i].suit != straightFlush.last().suit) {
+                straightFlush = mutableListOf(sortedCards[i])
             }
         }
-        println(pair)
-        return pair == 4
-    }
-
-    private fun fullHouse(): Boolean {
-        var pair = 0
-
-        for (card in cards) {
-            if (card[1] == "2" || card[1] == "3") pair++
-        }
-        return pair >= 5
-    }
-
-    private fun flush(): Boolean {
-        val equal = mutableListOf<List<String>>()
-
-        for (card in cards) {
-            if (card[1] == "Queen" || card[1] == "2" || card[1] == "6" || card[1] == "8" || card[1] == "A") equal.add(card)
-        }
-
-        if (equal.size == 5) return (equal[0][0] == equal[1][0] && equal[1][0] == equal[2][0] && equal[2][0] == equal[3][0] && equal[3][0] == equal[4][0])
         return false
     }
 
-    private fun straight(): Boolean {
-        var pair: Int = 0
-        for (card in cards) {
-            if (card[1] == "5" || card[1] == "4" || card[1] == "3" || card[1] == "2" || card[1] == "A") pair++
-        }
+    private fun fourOfKind(): Boolean {
+        val cardGroups = cards.groupBy { it.rank }
+        return cardGroups.values.any { it.size >= 4 }
+    }
 
-        return pair == 5
+    private fun fullHouse(): Boolean {
+        val cardGroups = cards.groupBy { it.rank }
+        val threeOfAKind = cardGroups.values.firstOrNull { it.size == 3 }
+        val pair = cardGroups.values.firstOrNull { it.size >= 2 && it != threeOfAKind }
+        return threeOfAKind != null && pair != null
+    }
+
+    private fun flush(): Boolean {
+        val cardGroups = cards.groupBy { it.suit }
+        return cardGroups.values.any{it.size >= 5 }
+    }
+
+    private fun straight(): Boolean {
+        val sortedCards = cards.sortedBy { it.rank }
+        var straight = mutableListOf(sortedCards[0])
+        for (i in 1 until sortedCards.size) {
+            if (sortedCards[i].rank == straight.last().rank + 1) {
+                straight.add(sortedCards[i])
+                if (straight.size == 5) {
+                    return true
+                }
+            } else if (sortedCards[i].rank != straight.last().rank) {
+                straight = mutableListOf(sortedCards[i])
+            }
+        }
+        return false
+
     }
 
     private fun threeOfKind(): Boolean {
-        var pair = 0
-        for (i in 0..<cards.size) {
-            val list1 = cards[i][1]
-            for (j in (i + 1)..<cards.size) {
-                val list2 = cards[j][1]
-                for (k in (i + 2)..<cards.size) {
-                    val list3 = cards[k][1]
-                    if (list1 == list2 && list2 == list3) {
-                        pair++
-                    }
-                }
-            }
-        }
-        println(pair)
-        return pair == 4
+        val cardGroups = cards.groupBy { it.rank }
+        return cardGroups.values.any { it.size == 3 }
     }
 
     private fun twoPair(): Boolean {
-        var pair: Int = 0
-
-        for (i in 0..<cards.size) {
-            val list1 = cards[i]
-            for (j in (i + 1)..<cards.size) {
-                val list2 = cards[j]
-                if (list1[1] == list2[1]) pair++
-
-            }
-        }
-
-        return pair >= 2
+        val cardGroups = cards.groupBy { it.rank }
+        return cardGroups.values.any { it.size == 2 }
     }
 
     private fun onePair(): Boolean {
@@ -115,7 +95,7 @@ public class Rules {
             val list1 = cards[i]
             for (j in (i + 1)..<cards.size) {
                 val list2 = cards[j]
-                if (list1[1] == list2[1]) pair++
+                if (list1.rank == list2.rank) pair++
             }
         }
 
@@ -124,7 +104,7 @@ public class Rules {
 
     private fun highCard(): Boolean {
         for (i in cards) {
-            if (i[1].equals("A")) {
+            if (i.rank == "A") {
                 return true
             }
         }
